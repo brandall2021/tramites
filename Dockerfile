@@ -35,13 +35,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # Generated client (source, referenced at runtime via @/ path alias)
 COPY --from=builder --chown=nextjs:nodejs /app/src/generated ./src/generated
 
-# Prisma CLI + engine (needed for migrate deploy)
+# Prisma CLI + all @prisma/* deps (needed for migrate deploy)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
-
-
-# Adapter for Prisma 7 (serverExternalPackages, not bundled)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/adapter-pg ./node_modules/@prisma/adapter-pg
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 COPY --chown=nextjs:nodejs start.sh ./start.sh
 RUN chmod +x start.sh
