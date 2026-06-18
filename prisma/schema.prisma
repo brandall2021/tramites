@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  EMPLEADO
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  PROCESANDO
+  COMPLETADO
+  RECHAZADO
+}
+
+enum Prioridad {
+  BAJA
+  NORMAL
+  ALTA
+}
+
+enum TipoTramite {
+  CERTIFICADO
+  INSCRIPCION
+  CONSULTA
+  OTRO
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nombre    String
+  password  String
+  role      Role     @default(EMPLEADO)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  respuestas  Respuesta[]
+  auditorias  Auditoria[]
+
+  @@map("users")
+}
+
+model CuentaEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  host      String
+  port      Int      @default(993)
+  usuario   String
+  password  String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cuentas_email")
+}
+
+model Solicitud {
+  id          String          @id @default(cuid())
+  email       String
+  asunto      String
+  mensaje     String
+  fecha       DateTime        @default(now())
+  estado      EstadoSolicitud @default(PENDIENTE)
+  tipoTramite TipoTramite?
+  prioridad   Prioridad       @default(NORMAL)
+  leido       Boolean         @default(false)
+  emailUid    Int?
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  analisis    AnalisisIA?
+  respuestas  Respuesta[]
+  adjuntos    Adjunto[]
+  auditorias  Auditoria[]
+
+  @@map("solicitudes")
+}
+
+model AnalisisIA {
+  id          String   @id @default(cuid())
+  solicitudId String   @unique
+  categoria   String?
+  confianza   Float?
+  resultado   Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+
+  @@map("analisis_ia")
+}
+
+model Respuesta {
+  id          String     @id @default(cuid())
+  solicitudId String
+  texto       String
+  aprobada    Boolean    @default(false)
+  aprobadaPor String?
+  fechaEnvio  DateTime?
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  aprobador User?     @relation(fields: [aprobadaPor], references: [id])
+
+  @@map("respuestas")
+}
+
+model Adjunto {
+  id          String @id @default(cuid())
+  solicitudId String
+  nombre      String
+  tipo        String
+  datos       String
+
+  solicitud Solicitud @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+
+  @@map("adjuntos")
+}
+
+model Auditoria {
+  id        String   @id @default(cuid())
+  accion    String
+  usuario   String?
+  solicitudId String?
+  detalle   String?
+  fecha     DateTime @default(now())
+
+  solicitud Solicitud? @relation(fields: [solicitudId], references: [id])
+  user      User?      @relation(fields: [usuario], references: [id])
+
+  @@map("auditoria")
+}
