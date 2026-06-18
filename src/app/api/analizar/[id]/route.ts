@@ -5,22 +5,55 @@ import { NextRequest } from "next/server"
 import { registrarAuditoria } from "@/lib/audit"
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth()
   if (!session) return Response.json({ error: "No autorizado" }, { status: 401 })
 
   const { id } = await params
-  const solicitud = await prisma.solicitud.findUnique({ where: { id } })
+  const solicitud = await prisma.solicitud.findUnique({
+    where: { id },
+    include: { alumno: true },
+  })
   if (!solicitud) return Response.json({ error: "No encontrada" }, { status: 404 })
+
+  const normativas = await prisma.normativa.findMany({
+    where: { activa: true },
+    orderBy: { createdAt: "desc" },
+  })
+
+  const normativasText = normativas.length > 0
+    ? `\nNormativas institucionales vigentes:\n${normativas.map(n =>
+        `- ${n.titulo}: ${n.contenido}`
+      ).join("\n")}`
+    : ""
+
+  const historial = solicitud.alumno
+    ? await prisma.solicitud.findMany({
+        where: {
+          alumnoId: solicitud.alumno.id,
+          id: { not: id },
+        },
+        orderBy: { fecha: "desc" },
+        take: 5,
+        select: { asunto: true, tipoTramite: true, estado: true, createdAt: true },
+      })
+    : []
+
+  const historialText = historial.length > 0
+    ? `\nHistorial del alumno:\n${historial.map(h =>
+        `- ${h.asunto} (${h.tipoTramite || "sin clasificar"}) - ${h.estado}`
+      ).join("\n")}`
+    : ""
 
   const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   })
 
-  const prompt = `Analiza la siguiente solicitud académica y clasifícala.
-  
+  const prompt = `Eres un asistente administrativo de una institución educativa. Analiza la siguiente solicitud y genera una respuesta profesional.${normativasText}${historialText}
+
+Solicitud actual:
 Asunto: ${solicitud.asunto}
 Mensaje: ${solicitud.mensaje}
 Email: ${solicitud.email}
@@ -31,13 +64,14 @@ Responde solo con JSON en este formato exacto:
   "prioridad": "BAJA" | "NORMAL" | "ALTA",
   "confianza": 0.0-1.0,
   "resumen": "breve resumen del trámite",
-  "datosExtraidos": { "campos relevantes encontrados en el texto" }
+  "datosExtraidos": { "campos relevantes encontrados en el texto" },
+  "respuestaPropuesta": "texto completo de la respuesta institucional, citando normativas si corresponde"
 }`
 
   try {
     const message = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     })
 
@@ -73,7 +107,7 @@ Responde solo con JSON en este formato exacto:
       },
     })
 
-    const respuestaIA = generarRespuestaBase(result.tipoTramite)
+    const respuestaIA = result.respuestaPropuesta || generarRespuestaBase(result.tipoTramite)
 
     await registrarAuditoria(
       "ANALISIS_IA",
@@ -94,8 +128,6 @@ function generarRespuestaBase(tipo: string): string {
     CERTIFICADO: `Estimado/a:
 
 Hemos recibido su solicitud de certificado. La misma será procesada por el área de alumnos.
-
-Número de trámite asignado automáticamente.
 
 Saludos cordiales.`,
     INSCRIPCION: `Estimado/a:

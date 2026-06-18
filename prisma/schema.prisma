@@ -62,6 +62,31 @@ model CuentaEmail {
   @@map("cuentas_email")
 }
 
+model Alumno {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nombre    String?
+  telefono  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  solicitudes Solicitud[]
+
+  @@map("alumnos")
+}
+
+model Normativa {
+  id        String   @id @default(cuid())
+  titulo    String
+  contenido String
+  tipo      String   @default("RESOLUCION")
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("normativas")
+}
+
 model Solicitud {
   id          String          @id @default(cuid())
   email       String
@@ -73,9 +98,11 @@ model Solicitud {
   prioridad   Prioridad       @default(NORMAL)
   leido       Boolean         @default(false)
   emailUid    Int?
+  alumnoId    String?
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime        @updatedAt @map("updated_at")
 
+  alumno      Alumno?     @relation(fields: [alumnoId], references: [id])
   analisis    AnalisisIA?
   respuestas  Respuesta[]
   adjuntos    Adjunto[]

@@ -49,13 +49,17 @@ async function procesarCuentaIMAP(cuenta: { id: string; email: string; host: str
         })
 
         if (!existente) {
+          const emailAddr = parsed.from?.value?.[0]?.address || "desconocido@email.com"
+          const { getOrCreateAlumno } = await import("@/lib/alumno")
+          const alumno = await getOrCreateAlumno(emailAddr)
           await prisma.solicitud.create({
             data: {
-              email: parsed.from?.value?.[0]?.address || "desconocido@email.com",
+              email: emailAddr,
               asunto: parsed.subject || "Sin asunto",
               mensaje: parsed.text || parsed.html || "Sin contenido",
               emailUid: msg.uid,
               estado: "PENDIENTE",
+              alumnoId: alumno.id,
             },
           })
           count++

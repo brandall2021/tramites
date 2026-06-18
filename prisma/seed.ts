@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { PrismaClient } from "../src/generated/prisma"
+import { PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import bcrypt from "bcryptjs"
 
@@ -32,12 +32,22 @@ async function main() {
     },
   })
 
+  const alumno = await prisma.alumno.upsert({
+    where: { email: "alumno@universidad.edu" },
+    update: {},
+    create: {
+      email: "alumno@universidad.edu",
+      nombre: "Alumno Demo",
+    },
+  })
+
   const solicitud = await prisma.solicitud.create({
     data: {
       email: "alumno@universidad.edu",
       asunto: "Solicitud de certificado de alumno regular",
       mensaje: "Hola, necesito un certificado de alumno regular para presentar en una beca. Mi DNI es 12345678. Muchas gracias.",
       estado: "PENDIENTE",
+      alumnoId: alumno.id,
     },
   })
 
@@ -47,6 +57,26 @@ async function main() {
       detalle: "Solicitud creada desde seed",
       solicitudId: solicitud.id,
     },
+  })
+
+  await prisma.normativa.createMany({
+    data: [
+      {
+        titulo: "Resolución N° 123/2024 - Certificados",
+        contenido: "Los certificados de alumno regular se emiten en un plazo máximo de 5 días hábiles. El estudiante debe tener matrícula vigente y presentar DNI.",
+        tipo: "RESOLUCION",
+      },
+      {
+        titulo: "Resolución N° 456/2024 - Inscripciones",
+        contenido: "Las inscripciones a carreras de grado se realizan en febrero y julio de cada año. Se requiere DNI, título secundario y pago del arancel correspondiente.",
+        tipo: "RESOLUCION",
+      },
+      {
+        titulo: "Reglamento de Consultas",
+        contenido: "Las consultas administrativas serán respondidas dentro de las 48 horas hábiles. Consultas urgentes deben canalizarse por mesa de entradas.",
+        tipo: "REGLAMENTO",
+      },
+    ],
   })
 
   console.log("Seed completado")

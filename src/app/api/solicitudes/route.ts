@@ -38,12 +38,16 @@ export async function POST(request: NextRequest) {
   if (!session) return Response.json({ error: "No autorizado" }, { status: 401 })
 
   const body = await request.json()
+  const { getOrCreateAlumno } = await import("@/lib/alumno")
+  const alumno = await getOrCreateAlumno(body.email)
+
   const solicitud = await prisma.solicitud.create({
     data: {
       email: body.email,
       asunto: body.asunto,
       mensaje: body.mensaje,
       estado: "PENDIENTE",
+      alumnoId: alumno.id,
     },
   })
 
