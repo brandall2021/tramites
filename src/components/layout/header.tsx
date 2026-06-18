@@ -1,12 +1,14 @@
 "use client"
 
 import { signOut } from "next-auth/react"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export function Header({ user }: { user: { name?: string | null; email?: string | null; role: string } }) {
   return (
     <header className="flex h-14 items-center justify-between border-b border-stone-200 bg-white px-6">
       <div />
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <span className="text-sm text-stone-500">
           {user.name || user.email}
         </span>
