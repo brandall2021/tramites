@@ -32,7 +32,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # Replace node_modules with builder's pruned node_modules (includes prisma CLI + all deps)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Prisma schema + migrations (for migrate deploy at startup)
+# Prisma config + schema + migrations (needed for migrate deploy at startup)
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 # Generated client (runtime import via @/ path alias)
