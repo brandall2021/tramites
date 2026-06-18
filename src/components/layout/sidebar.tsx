@@ -10,6 +10,7 @@ export function Sidebar({ role }: { role: string }) {
       </div>
       <nav className="flex-1 space-y-1 p-3">
         <SidebarLink href="/dashboard" label="Dashboard" />
+        <SidebarLink href="/crm" label="CRM" />
         <SidebarLink href="/solicitudes" label="Solicitudes" />
         {role === "ADMIN" && (
           <>
