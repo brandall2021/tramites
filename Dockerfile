@@ -38,7 +38,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/src/generated ./src/generated
 # Prisma CLI + engine (needed for migrate deploy)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+
 
 # Adapter for Prisma 7 (serverExternalPackages, not bundled)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma/adapter-pg ./node_modules/@prisma/adapter-pg
