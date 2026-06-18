@@ -108,6 +108,7 @@ cp .env.example .env
 # Crear base de datos y migrar
 npx prisma migrate dev
 
+# La URL de BD se define en prisma.config.ts (lee DATABASE_URL del entorno o .env)
 # Generar cliente Prisma
 npx prisma generate
 
@@ -140,7 +141,7 @@ npm run dev
 DATABASE_URL="postgresql://usuario:password@host:5432/tramites?schema=public"
 OPENAI_API_KEY="sk-..."
 NEXTAUTH_SECRET="generar-con openssl rand -base64 32"
-NEXTAUTH_URL="https://tramites.tudominio.com"
+NEXTAUTH_URL="https://tramites.face-unt.ar"
 ```
 
 ## Deploy con Dokploy
@@ -157,16 +158,19 @@ NEXTAUTH_URL="https://tramites.tudominio.com"
 Configurar en la sección "Environment" del proyecto:
 
 ```
-DATABASE_URL=postgresql://usuario:password@host:5432/tramites?schema=public
+DATABASE_URL=postgresql://usuario:password@186.153.163.188:5432/tramites?schema=public
 OPENAI_API_KEY=sk-...
 NEXTAUTH_SECRET=...
-NEXTAUTH_URL=https://tramites.tudominio.com
+NEXTAUTH_URL=https://tramites.face-unt.ar
 ```
 
 ### 3. Base de datos
 
 La aplicación ejecuta `prisma migrate deploy` automáticamente al iniciar (ver `start.sh`).
 Asegurate de tener una base de datos PostgreSQL accesible desde el contenedor.
+
+> **Nota Prisma 7**: La URL de conexión se define en `prisma.config.ts` (no en `schema.prisma`).
+> El CLI lee `DATABASE_URL` desde las variables de entorno o desde un archivo `.env` al arrancar.
 
 ### 4. Configuración Gmail (IMAP)
 
@@ -180,7 +184,11 @@ Después del deploy, desde el panel admin:
 3. Para generar la contraseña de aplicación: https://myaccount.google.com/apppasswords
 4. IMPORTANTE: Activar IMAP en configuración de Gmail
 
-### 5. Normativas
+### 5. Reverse proxy (trustHost)
+
+NextAuth requiere `trustHost: true` cuando corre detrás de un reverse proxy (Dokploy). Ya está configurado en `src/lib/auth.ts`.
+
+### 6. Normativas
 
 Desde el panel admin se pueden cargar las normativas institucionales que la IA usará
 para generar respuestas contextualizadas.
