@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
-import Anthropic from "@anthropic-ai/sdk"
+import OpenAI from "openai"
 import { NextRequest } from "next/server"
 import { registrarAuditoria } from "@/lib/audit"
 
@@ -47,8 +47,8 @@ export async function POST(
       ).join("\n")}`
     : ""
 
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
   })
 
   const prompt = `Eres un asistente administrativo de una institución educativa. Analiza la siguiente solicitud y genera una respuesta profesional.${normativasText}${historialText}
@@ -58,7 +58,7 @@ Asunto: ${solicitud.asunto}
 Mensaje: ${solicitud.mensaje}
 Email: ${solicitud.email}
 
-Responde solo con JSON en este formato exacto:
+Responde solo con JSON en este formato exacto, sin markdown ni etiquetas:
 {
   "tipoTramite": "CERTIFICADO" | "INSCRIPCION" | "CONSULTA" | "OTRO",
   "prioridad": "BAJA" | "NORMAL" | "ALTA",
@@ -69,19 +69,17 @@ Responde solo con JSON en este formato exacto:
 }`
 
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
     })
 
-    const content = message.content[0]
-    let result
-    if (content.type === "text") {
-      result = JSON.parse(content.text)
-    } else {
-      throw new Error("Unexpected response type")
-    }
+    const text = response.choices[0]?.message?.content
+    if (!text) throw new Error("Respuesta vacía de OpenAI")
+
+    const result = JSON.parse(text)
 
     const analisis = await prisma.analisisIA.upsert({
       where: { solicitudId: id },
@@ -118,7 +116,7 @@ Responde solo con JSON en este formato exacto:
 
     return Response.json({ analisis, respuestaIA })
   } catch (error) {
-    console.error("Error analizando con IA:", error)
+    console.error("Error analizando con OpenAI:", error)
     return Response.json({ error: "Error al analizar" }, { status: 500 })
   }
 }

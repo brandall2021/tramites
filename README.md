@@ -12,7 +12,7 @@ Sistema de gestión, análisis y respuesta automatizada de solicitudes académic
 | Base de datos | PostgreSQL |
 | ORM | Prisma 7 (Driver Adapters) |
 | Autenticación | NextAuth v5 (Credentials) |
-| IA | Anthropic Claude 3.5 Sonnet |
+| IA | OpenAI GPT-4o |
 | Email | IMAP (imapflow + mailparser) |
 | Deploy | Docker + Dokploy |
 
@@ -26,8 +26,8 @@ Usuario (email)               Admin / Empleado (web)
 │   IMAP   │ ──email──►   │   Next.js App    │
 │ (Gmail)  │              │                  │
 └──────────┘              │  ┌────────────┐  │
-                          │  │   Claude   │  │
-┌──────────┐              │  │  (Anthropic)│  │
+                          │  │   GPT-4o   │  │
+┌──────────┐              │  │  (OpenAI)  │  │
 │  Formul. │ ──web───►   │  └────────────┘  │
 │   Web    │              │                  │
 └──────────┘              │  ┌────────────┐  │
@@ -44,7 +44,7 @@ Usuario (email)               Admin / Empleado (web)
 - **IMAP automático**: sincroniza una casilla de correo (Gmail, etc.) y convierte emails entrantes en solicitudes
 - **Detección de alumno**: vincula automáticamente por email, con historial de trámites
 
-### Análisis con IA (Claude)
+### Análisis con IA (OpenAI GPT-4o)
 - Clasifica el tipo de trámite: CERTIFICADO, INSCRIPCIÓN, CONSULTA, OTRO
 - Asigna prioridad: ALTA, NORMAL, BAJA
 - Extrae datos relevantes del texto
@@ -76,7 +76,7 @@ Usuario (email)               Admin / Empleado (web)
 User (admin/empleado)
 Alumno (estudiantes con historial)
 Solicitud (trámite)
-├── AnalisisIA (resultado de Claude)
+├── AnalisisIA (resultado de OpenAI)
 ├── Respuesta (borrador o enviada)
 ├── Adjunto (archivos)
 └── Auditoria (trazabilidad)
@@ -130,7 +130,7 @@ npm run dev
 | Variable | Obligatoria | Descripción |
 |----------|------------|-------------|
 | `DATABASE_URL` | ✅ | Conexión a PostgreSQL |
-| `ANTHROPIC_API_KEY` | ✅ | API key de Anthropic para Claude |
+| `OPENAI_API_KEY` | ✅ | API key de OpenAI para GPT-4o |
 | `NEXTAUTH_SECRET` | ✅ | Secreto para firmar tokens JWT |
 | `NEXTAUTH_URL` | ✅ | URL pública del sitio |
 
@@ -138,7 +138,7 @@ npm run dev
 
 ```env
 DATABASE_URL="postgresql://usuario:password@host:5432/tramites?schema=public"
-ANTHROPIC_API_KEY="sk-ant-..."
+OPENAI_API_KEY="sk-..."
 NEXTAUTH_SECRET="generar-con openssl rand -base64 32"
 NEXTAUTH_URL="https://tramites.tudominio.com"
 ```
@@ -158,7 +158,7 @@ Configurar en la sección "Environment" del proyecto:
 
 ```
 DATABASE_URL=postgresql://usuario:password@host:5432/tramites?schema=public
-ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
 NEXTAUTH_SECRET=...
 NEXTAUTH_URL=https://tramites.tudominio.com
 ```
@@ -216,7 +216,7 @@ El proyecto incluye un Dockerfile multi-stage optimizado para producción:
 | `/api/auth/[...nextauth]` | POST | Autenticación |
 | `/api/solicitudes` | GET/POST | Listar/crear solicitudes |
 | `/api/solicitudes/[id]` | GET/PATCH/DELETE | CRUD solicitud |
-| `/api/analizar/[id]` | POST | Analizar con Claude |
+| `/api/analizar/[id]` | POST | Analizar con OpenAI GPT-4o |
 | `/api/responder/[id]` | POST/PATCH | Crear/aprobar respuesta |
 | `/api/imap/sync` | POST | Sincronizar correo IMAP |
 | `/api/cuentas-email` | GET/POST | CRUD cuentas email |
