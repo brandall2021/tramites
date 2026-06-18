@@ -24,20 +24,19 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Standalone server + its node_modules
+# Standalone server
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Replace node_modules with builder's pruned node_modules (includes prisma CLI + all deps)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
 # Prisma schema + migrations (for migrate deploy at startup)
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Generated client (source, referenced at runtime via @/ path alias)
+# Generated client (runtime import via @/ path alias)
 COPY --from=builder --chown=nextjs:nodejs /app/src/generated ./src/generated
-
-# Prisma CLI + all @prisma/* deps (needed for migrate deploy)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 COPY --chown=nextjs:nodejs start.sh ./start.sh
 RUN chmod +x start.sh
