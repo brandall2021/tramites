@@ -145,7 +145,7 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setShowModal(true)}
-          className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+          className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark"
         >
           Agregar cuenta
         </button>
@@ -303,7 +303,7 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                  className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark disabled:opacity-50"
                 >
                   {loading ? "Guardando..." : "Guardar"}
                 </button>
@@ -379,7 +379,7 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                  className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark disabled:opacity-50"
                 >
                   {editLoading ? "Guardando..." : "Guardar"}
                 </button>

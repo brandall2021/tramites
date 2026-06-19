@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
+import { getConfig } from "@/lib/config"
 import OpenAI from "openai"
 import { NextRequest } from "next/server"
 import { registrarAuditoria } from "@/lib/audit"
@@ -47,9 +48,12 @@ export async function POST(
       ).join("\n")}`
     : ""
 
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
+  const apiKey = await getConfig("OPENAI_API_KEY")
+  if (!apiKey) {
+    return Response.json({ error: "API key de OpenAI no configurada" }, { status: 400 })
+  }
+
+  const openai = new OpenAI({ apiKey })
 
   const prompt = `Eres un asistente administrativo de una institución educativa. Analiza la siguiente solicitud y genera una respuesta profesional.${normativasText}${historialText}
 

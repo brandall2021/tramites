@@ -43,7 +43,7 @@ export default async function AdminSolicitudesPage() {
         <h1 className="text-2xl font-bold tracking-tight">Todas las solicitudes</h1>
         <Link
           href="/solicitudes/nueva"
-          className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+          className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-face-dark"
         >
           Nueva solicitud
         </Link>

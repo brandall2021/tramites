@@ -97,7 +97,7 @@ export function UserList({ users }: { users: User[] }) {
           setEditUser(null)
           setShowModal(true)
         }}
-        className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+        className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark"
       >
         Nuevo usuario
       </button>
@@ -233,7 +233,7 @@ export function UserList({ users }: { users: User[] }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                  className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark disabled:opacity-50"
                 >
                   {loading ? "Guardando..." : "Guardar"}
                 </button>

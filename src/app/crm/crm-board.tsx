@@ -133,7 +133,7 @@ export function CrmBoard({
           <h1 className="text-2xl font-bold tracking-tight">CRM</h1>
           <Link
             href="/solicitudes/nueva"
-            className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+            className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark"
           >
             Nueva solicitud
           </Link>
@@ -286,7 +286,7 @@ export function CrmBoard({
               {!selected.analisis && selected.estado === "PENDIENTE" && (
                 <button
                   onClick={() => analizar(selected.id)}
-                  className="rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-stone-800"
+                  className="rounded-lg bg-face px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-face-dark"
                 >
                   Analizar IA
                 </button>

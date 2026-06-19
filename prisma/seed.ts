@@ -126,6 +126,17 @@ Departamento de Trámites Académicos`,
     ],
   })
 
+  const configs = [
+    { clave: "OPENAI_API_KEY", valor: process.env.OPENAI_API_KEY || "" },
+  ]
+  for (const c of configs) {
+    await prisma.configuracion.upsert({
+      where: { clave: c.clave },
+      update: { valor: c.valor },
+      create: { clave: c.clave, valor: c.valor },
+    })
+  }
+
   console.log("Seed completado")
   console.log("  Admin: admin@tramites.edu / admin123")
   console.log("  Empleado: empleado@tramites.edu / empleado123")

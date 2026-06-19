@@ -84,7 +84,7 @@ export function PlantillasList({ plantillas }: { plantillas: Plantilla[] }) {
     <div className="space-y-4">
       <button
         onClick={openCreate}
-        className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+        className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark"
       >
         Nueva plantilla
       </button>
@@ -198,7 +198,7 @@ export function PlantillasList({ plantillas }: { plantillas: Plantilla[] }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                  className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark disabled:opacity-50"
                 >
                   {loading ? "Guardando..." : "Guardar"}
                 </button>

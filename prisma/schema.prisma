@@ -175,3 +175,13 @@ model Auditoria {
 
   @@map("auditoria")
 }
+
+model Configuracion {
+  id        String   @id @default(cuid())
+  clave     String   @unique
+  valor     String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("configuracion")
+}

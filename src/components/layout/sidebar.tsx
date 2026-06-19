@@ -14,6 +14,7 @@ const ADMIN_ITEMS = [
   { href: "/admin/solicitudes", label: "Todas las solicitudes", icon: "□" },
   { href: "/admin/cuentas-email", label: "Cuentas Email", icon: "◎" },
   { href: "/admin/plantillas", label: "Plantillas", icon: "▽" },
+  { href: "/admin/configuracion", label: "Configuración", icon: "⚙" },
   { href: "/admin/usuarios", label: "Usuarios", icon: "△" },
 ]
 
@@ -54,9 +55,10 @@ export function Sidebar({ role }: { role: string }) {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-stone-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0`}
       >
-        <div className="flex h-14 items-center border-b border-stone-200 px-5">
-          <Link href="/dashboard" className="text-sm font-bold tracking-tight">
-            Gestor Trámites
+        <div className="flex h-14 items-center border-b border-stone-200 px-4">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <img src="/face-logo-dark.png" alt="FACET" className="h-8 w-auto object-contain" />
+            <span className="text-xs font-bold tracking-tight text-stone-600">Trámites</span>
           </Link>
         </div>
         <nav className="flex-1 space-y-1 p-3">
@@ -118,7 +120,7 @@ function SidebarLink({
       onClick={onClick}
       className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all ${
         active
-          ? "bg-stone-900 font-medium text-white"
+          ? "bg-face font-medium text-white"
           : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
       }`}
     >

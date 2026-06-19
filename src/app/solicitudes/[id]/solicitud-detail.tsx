@@ -193,7 +193,7 @@ export function SolicitudDetail({
         <button
           onClick={analizarIA}
           disabled={analizando}
-          className="flex items-center gap-2 rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-800 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-face px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-face-dark disabled:opacity-50"
         >
           {analizando && (
             <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -299,7 +299,7 @@ export function SolicitudDetail({
               <button
                 onClick={() => enviarRespuesta(true)}
                 disabled={enviando || !respuestaTexto.trim()}
-                className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                className="rounded-lg bg-face px-4 py-2 text-sm font-medium text-white hover:bg-face-dark disabled:opacity-50"
               >
                 Enviar respuesta
               </button>
