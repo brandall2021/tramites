@@ -48,7 +48,17 @@ export async function POST(request: NextRequest) {
       mensaje: body.mensaje,
       estado: "PENDIENTE",
       alumnoId: alumno.id,
+      adjuntos: body.adjuntos?.length
+        ? {
+            create: body.adjuntos.map((a: { nombre: string; tipo: string; datos: string }) => ({
+              nombre: a.nombre,
+              tipo: a.tipo,
+              datos: a.datos,
+            })),
+          }
+        : undefined,
     },
+    include: { adjuntos: { select: { id: true, nombre: true, tipo: true } } },
   })
 
   await registrarAuditoria(

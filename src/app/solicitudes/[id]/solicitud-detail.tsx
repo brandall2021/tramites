@@ -29,6 +29,7 @@ type Solicitud = {
     id: string
     nombre: string
     tipo: string
+    datos: string
   }[]
   auditorias: {
     id: string
@@ -52,6 +53,8 @@ export function SolicitudDetail({
   const [analizando, setAnalizando] = useState(false)
   const [respuestaTexto, setRespuestaTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
+  const [uploadFiles, setUploadFiles] = useState<File[]>([])
+  const [subiendoArchivo, setSubiendoArchivo] = useState(false)
   const { addToast } = useToast()
 
   async function analizarIA() {
@@ -164,20 +167,70 @@ export function SolicitudDetail({
         </p>
       </div>
 
-      {solicitud.adjuntos.length > 0 && (
-        <div className="rounded-xl border border-stone-200 bg-white p-6">
-          <h2 className="mb-3 text-sm font-semibold">Adjuntos</h2>
-          <div className="space-y-2">
+      <div className="rounded-xl border border-stone-200 bg-white p-6">
+        <h2 className="mb-3 text-sm font-semibold">Adjuntos</h2>
+
+        {solicitud.adjuntos.length > 0 && (
+          <div className="mb-3 space-y-2">
             {solicitud.adjuntos.map((a) => (
               <div key={a.id} className="flex items-center gap-2 text-sm text-stone-600">
                 <span>📎</span>
-                <span>{a.nombre}</span>
+                <a
+                  href={a.datos}
+                  download={a.nombre}
+                  className="text-face hover:underline"
+                >
+                  {a.nombre}
+                </a>
                 <span className="text-xs text-stone-400">({a.tipo})</span>
               </div>
             ))}
           </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <input
+            type="file"
+            multiple
+            onChange={async (e) => {
+              const files = Array.from(e.target.files || [])
+              if (!files.length) return
+              setSubiendoArchivo(true)
+              for (const file of files) {
+                const reader = new FileReader()
+                const datos = await new Promise<string>((resolve) => {
+                  reader.onload = () => resolve(reader.result as string)
+                  reader.readAsDataURL(file)
+                })
+                try {
+                  const res = await fetch(`/api/solicitudes/${solicitud.id}/adjuntos`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre: file.name, tipo: file.type, datos }),
+                  })
+                  if (res.ok) {
+                    addToast(`${file.name} subido`, "success")
+                  } else {
+                    addToast(`Error al subir ${file.name}`, "error")
+                  }
+                } catch {
+                  addToast("Error de conexión", "error")
+                }
+              }
+              setSubiendoArchivo(false)
+              router.refresh()
+            }}
+            className="block w-full text-sm text-stone-500 file:mr-4 file:rounded-lg file:border-0 file:bg-face file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-face-dark"
+          />
+          {subiendoArchivo && (
+            <span className="text-xs text-stone-400">Subiendo...</span>
+          )}
         </div>
-      )}
+
+        {solicitud.adjuntos.length === 0 && (
+          <p className="mb-3 text-xs text-stone-400">Sin archivos adjuntos</p>
+        )}
+      </div>
 
       {solicitud.analisis && (
         <div className="rounded-xl border border-stone-200 bg-white p-6">
