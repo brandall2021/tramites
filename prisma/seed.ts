@@ -79,6 +79,53 @@ async function main() {
     ],
   })
 
+  await prisma.plantillaRespuesta.createMany({
+    data: [
+      {
+        nombre: "Cancelación de Matrícula",
+        tipo: "CANCELACION",
+        texto: `Estimado/a alumno/a,
+
+Hemos recibido su solicitud de Cancelación de Matrícula.
+
+A continuación, le detallamos los pasos a seguir:
+
+1. Ingrese al portal AUTOGESTIÓN ALUMNOS
+2. Diríjase al apartado "DOCUMENTACIÓN PARA CANCELACIÓN DE MATRÍCULA"
+3. Complete la documentación requerida
+4. Siga todos los pasos indicados en el sistema
+
+Importante: Una vez iniciado el trámite, el plazo de procesamiento es de 30 a 40 días hábiles.
+
+Para más información, puede consultar la documentación disponible en el portal o comunicarse con nuestra mesa de ayuda.
+
+Saludos cordiales,
+Departamento de Trámites Académicos`,
+      },
+      {
+        nombre: "Legalización de Materias",
+        tipo: "LEGALIZACION",
+        texto: `Estimado/a alumno/a,
+
+Hemos recibido su solicitud de Legalización de Materias.
+
+Para realizar este trámite, siga estos pasos:
+
+1. Ingrese al portal AUTOGESTIÓN ALUMNOS
+2. Diríjase al apartado "DOCUMENTACIÓN PARA LEGALIZACIÓN DE MATERIAS"
+3. Complete la documentación requerida
+4. Siga todos los pasos indicados en el sistema
+
+Importante: Este trámite aplica cuando desea cursar una carrera paralela distinta a la que actualmente realiza en nuestra institución.
+
+El plazo de procesamiento es de 30 a 40 días hábiles.
+
+Saludos cordiales,
+Departamento de Trámites Académicos`,
+      },
+    ],
+  })
+
   console.log("Seed completado")
   console.log("  Admin: admin@tramites.edu / admin123")
   console.log("  Empleado: empleado@tramites.edu / empleado123")

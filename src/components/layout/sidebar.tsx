@@ -16,6 +16,7 @@ export function Sidebar({ role }: { role: string }) {
           <>
             <SidebarLink href="/admin/solicitudes" label="Todas las solicitudes" />
             <SidebarLink href="/admin/cuentas-email" label="Cuentas Email" />
+            <SidebarLink href="/admin/plantillas" label="Plantillas" />
             <SidebarLink href="/admin/usuarios" label="Usuarios" />
           </>
         )}

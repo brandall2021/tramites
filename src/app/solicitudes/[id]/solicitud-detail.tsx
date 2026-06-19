@@ -62,6 +62,29 @@ export function SolicitudDetail({
     }
   }
 
+  const [plantillas, setPlantillas] = useState<{ id: string; nombre: string; tipo: string | null; texto: string }[]>([])
+  const [showPlantillas, setShowPlantillas] = useState(false)
+
+  async function cargarPlantillas() {
+    if (plantillas.length > 0) {
+      setShowPlantillas(!showPlantillas)
+      return
+    }
+    try {
+      const res = await fetch("/api/plantillas")
+      if (res.ok) {
+        const data = await res.json()
+        setPlantillas(data)
+        setShowPlantillas(true)
+      }
+    } catch {}
+  }
+
+  function usarPlantilla(p: { texto: string }) {
+    setRespuestaTexto(p.texto)
+    setShowPlantillas(false)
+  }
+
   async function enviarRespuesta(aprobarDirecto = false) {
     if (!respuestaTexto.trim()) return
     setEnviando(true)
@@ -202,6 +225,30 @@ export function SolicitudDetail({
 
         {solicitud.estado !== "COMPLETADO" && solicitud.estado !== "RECHAZADO" && (
           <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={cargarPlantillas}
+                className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
+              >
+                {showPlantillas ? "Ocultar plantillas" : "Usar plantilla"}
+              </button>
+            </div>
+            {showPlantillas && plantillas.length > 0 && (
+              <div className="rounded-lg border border-stone-200 bg-stone-50 p-2">
+                {plantillas.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => usarPlantilla(p)}
+                    className="block w-full rounded-md px-3 py-2 text-left text-sm text-stone-700 hover:bg-white"
+                  >
+                    <span className="font-medium">{p.nombre}</span>
+                    {p.tipo && <span className="ml-2 text-xs text-stone-400">({p.tipo})</span>}
+                  </button>
+                ))}
+              </div>
+            )}
             <textarea
               value={respuestaTexto}
               onChange={(e) => setRespuestaTexto(e.target.value)}

@@ -18,6 +18,8 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [editingCuenta, setEditingCuenta] = useState<Cuenta | null>(null)
+  const [editLoading, setEditLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -56,6 +58,33 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
     if (!confirm("¿Eliminar esta cuenta?")) return
     await fetch(`/api/cuentas-email/${id}`, { method: "DELETE" })
     router.refresh()
+  }
+
+  async function handleEditSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setEditLoading(true)
+
+    const form = new FormData(e.currentTarget)
+    const body: Record<string, unknown> = {
+      email: form.get("email"),
+      host: form.get("host"),
+      port: parseInt(form.get("port") as string) || 993,
+      usuario: form.get("usuario"),
+    }
+    const password = form.get("password") as string
+    if (password) body.password = password
+
+    const res = await fetch(`/api/cuentas-email/${editingCuenta!.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+
+    if (res.ok) {
+      setEditingCuenta(null)
+      router.refresh()
+    }
+    setEditLoading(false)
   }
 
   async function sincronizar() {
@@ -132,6 +161,12 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
                       className="text-xs text-amber-600 hover:text-amber-800"
                     >
                       {c.active ? "Desactivar" : "Activar"}
+                    </button>
+                    <button
+                      onClick={() => setEditingCuenta(c)}
+                      className="text-xs text-stone-600 hover:text-stone-800"
+                    >
+                      Editar
                     </button>
                     <button
                       onClick={() => eliminar(c.id)}
@@ -232,6 +267,82 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
                   className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
                 >
                   {loading ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editingCuenta && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-lg font-bold">Editar cuenta email</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  defaultValue={editingCuenta.email}
+                  className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700">Host</label>
+                <input
+                  name="host"
+                  required
+                  defaultValue={editingCuenta.host}
+                  className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700">Puerto</label>
+                <input
+                  name="port"
+                  type="number"
+                  defaultValue={editingCuenta.port}
+                  className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700">Usuario</label>
+                <input
+                  name="usuario"
+                  required
+                  defaultValue={editingCuenta.usuario}
+                  className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700">
+                  Contraseña
+                  <span className="ml-1 text-xs font-normal text-stone-400">
+                    (dejá vacío para no cambiar)
+                  </span>
+                </label>
+                <input
+                  name="password"
+                  type="password"
+                  className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingCuenta(null)}
+                  className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                >
+                  {editLoading ? "Guardando..." : "Guardar"}
                 </button>
               </div>
             </form>

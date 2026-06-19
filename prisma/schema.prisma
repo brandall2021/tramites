@@ -150,6 +150,18 @@ model Adjunto {
   @@map("adjuntos")
 }
 
+model PlantillaRespuesta {
+  id        String   @id @default(cuid())
+  nombre    String
+  tipo      String?
+  texto     String
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("plantillas_respuesta")
+}
+
 model Auditoria {
   id        String   @id @default(cuid())
   accion    String
