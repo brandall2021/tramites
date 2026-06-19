@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -60,6 +60,33 @@ export function CrmBoard({
   const [filtroTipo, setFiltroTipo] = useState("")
   const [filtroPrioridad, setFiltroPrioridad] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [historial, setHistorial] = useState<{
+    nombre: string | null
+    email: string
+    solicitudes: {
+      id: string
+      asunto: string
+      fecha: Date
+      estado: string
+      tipoTramite: string | null
+      prioridad: string
+    }[]
+  } | null>(null)
+  const [historialLoading, setHistorialLoading] = useState(false)
+
+  useEffect(() => {
+    const s = selectedId ? solicitudes.find((s) => s.id === selectedId) : null
+    if (!s?.alumno?.email) {
+      setHistorial(null)
+      return
+    }
+    setHistorialLoading(true)
+    fetch(`/api/alumnos/${encodeURIComponent(s.alumno.email)}`)
+      .then((r) => r.json())
+      .then((data) => setHistorial(data))
+      .catch(() => setHistorial(null))
+      .finally(() => setHistorialLoading(false))
+  }, [selectedId, solicitudes])
 
   const filtered = solicitudes.filter((s) => {
     if (search && !s.asunto.toLowerCase().includes(search.toLowerCase()) && !s.email.toLowerCase().includes(search.toLowerCase())) return false
@@ -260,6 +287,68 @@ export function CrmBoard({
             >
               Ver detalle completo →
             </Link>
+
+            {historialLoading && (
+              <p className="text-xs text-stone-400 text-center">Cargando historial...</p>
+            )}
+
+            {historial && (
+              <div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                    Historial del alumno
+                  </h3>
+                  <span className="text-[10px] text-stone-400">
+                    {historial.solicitudes.length} trámites
+                  </span>
+                </div>
+                <div className="mt-2 space-y-1.5 max-h-64 overflow-y-auto">
+                  {historial.solicitudes.map((h) => (
+                    <Link
+                      key={h.id}
+                      href={`/solicitudes/${h.id}`}
+                      className={`block rounded-lg border p-2.5 transition-colors hover:bg-stone-50 ${
+                        h.id === selected.id
+                          ? "border-stone-400 bg-stone-50"
+                          : "border-stone-200"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs font-medium leading-tight line-clamp-1">{h.asunto}</p>
+                        <span className={`shrink-0 rounded px-1 py-0.5 text-[9px] font-medium ${
+                          h.prioridad === "ALTA" ? "bg-red-100 text-red-700" :
+                          h.prioridad === "NORMAL" ? "bg-blue-100 text-blue-700" :
+                          "bg-stone-100 text-stone-600"
+                        }`}>
+                          {h.prioridad}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className={`rounded px-1 py-0.5 text-[9px] font-medium ${
+                          h.estado === "PENDIENTE" ? "bg-amber-100 text-amber-700" :
+                          h.estado === "PROCESANDO" ? "bg-blue-100 text-blue-700" :
+                          h.estado === "COMPLETADO" ? "bg-green-100 text-green-700" :
+                          "bg-red-100 text-red-700"
+                        }`}>
+                          {h.estado}
+                        </span>
+                        {h.tipoTramite && (
+                          <span className="text-[9px] text-stone-400">{h.tipoTramite}</span>
+                        )}
+                        <span className="text-[9px] text-stone-400 ml-auto">
+                          {new Date(h.fecha).toLocaleDateString("es-AR")}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                  {historial.solicitudes.length === 0 && (
+                    <p className="text-xs text-stone-400 text-center py-2">
+                      Sin trámites previos
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
