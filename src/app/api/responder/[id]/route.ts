@@ -2,6 +2,21 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { NextRequest } from "next/server"
 import { registrarAuditoria } from "@/lib/audit"
+import { sendEmail } from "@/lib/email"
+
+async function enviarEmailRespuesta(respuestaId: string) {
+  const respuesta = await prisma.respuesta.findUnique({
+    where: { id: respuestaId },
+    include: { solicitud: { select: { email: true, asunto: true } } },
+  })
+  if (!respuesta) throw new Error("Respuesta no encontrada")
+
+  await sendEmail({
+    to: respuesta.solicitud.email,
+    subject: `Re: ${respuesta.solicitud.asunto}`,
+    text: respuesta.texto,
+  })
+}
 
 export async function POST(
   request: NextRequest,
@@ -26,6 +41,16 @@ export async function POST(
   })
 
   if (body.aprobarDirecto) {
+    try {
+      await enviarEmailRespuesta(respuesta.id)
+    } catch (err) {
+      await prisma.respuesta.update({
+        where: { id: respuesta.id },
+        data: { aprobada: false, aprobadaPor: null, fechaEnvio: null },
+      })
+      return Response.json({ error: `Error al enviar email: ${(err as Error).message}` }, { status: 502 })
+    }
+
     await prisma.solicitud.update({
       where: { id },
       data: { estado: "COMPLETADO" },
@@ -51,7 +76,6 @@ export async function PATCH(
     return Response.json({ error: "No autorizado" }, { status: 401 })
 
   const { id } = await params
-  const body = await request.json()
 
   const respuesta = await prisma.respuesta.update({
     where: { id },
@@ -68,6 +92,16 @@ export async function PATCH(
   })
 
   if (solicitud) {
+    try {
+      await enviarEmailRespuesta(respuesta.id)
+    } catch (err) {
+      await prisma.respuesta.update({
+        where: { id },
+        data: { aprobada: false, aprobadaPor: null, fechaEnvio: null },
+      })
+      return Response.json({ error: `Error al enviar email: ${(err as Error).message}` }, { status: 502 })
+    }
+
     await prisma.solicitud.update({
       where: { id: solicitud.solicitudId },
       data: { estado: "COMPLETADO" },
@@ -77,7 +111,7 @@ export async function PATCH(
       "RESPUESTA_APROBADA",
       session.user.id,
       solicitud.solicitudId,
-      "Respuesta aprobada por admin"
+      "Respuesta aprobada y enviada por admin"
     )
   }
 

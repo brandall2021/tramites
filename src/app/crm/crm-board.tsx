@@ -71,6 +71,8 @@ export function CrmBoard({
       estado: string
       tipoTramite: string | null
       prioridad: string
+      analisis: { categoria: string | null; confianza: number | null } | null
+      respuestas: { id: string; aprobada: boolean }[]
     }[]
   } | null>(null)
   const [historialLoading, setHistorialLoading] = useState(false)
@@ -357,6 +359,12 @@ export function CrmBoard({
                         {h.tipoTramite && (
                           <span className="text-[9px] text-stone-400">{h.tipoTramite}</span>
                         )}
+                        {h.analisis?.confianza && (
+                          <span className="text-[9px] text-stone-400">{Math.round(h.analisis.confianza * 100)}%</span>
+                        )}
+                        {h.respuestas?.filter((r) => r.aprobada).length > 0 && (
+                          <span className="text-[9px] text-green-600">✓</span>
+                        )}
                         <span className="text-[9px] text-stone-400 ml-auto">
                           {new Date(h.fecha).toLocaleDateString("es-AR")}
                         </span>
@@ -369,6 +377,12 @@ export function CrmBoard({
                     </p>
                   )}
                 </div>
+                <Link
+                  href={`/alumnos/${encodeURIComponent(historial.email)}`}
+                  className="mt-2 block rounded-lg bg-stone-100 px-3 py-2 text-center text-xs font-medium text-stone-700 hover:bg-stone-200"
+                >
+                  Ver historial completo →
+                </Link>
               </div>
             )}
           </div>

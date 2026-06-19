@@ -56,6 +56,8 @@ model CuentaEmail {
   usuario   String
   password  String
   active    Boolean  @default(true)
+  smtpHost  String   @default("smtp.gmail.com")
+  smtpPort  Int      @default(465)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

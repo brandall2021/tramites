@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
       port: body.port || 993,
       usuario: body.usuario,
       password: body.password,
+      smtpHost: body.smtpHost || "smtp.gmail.com",
+      smtpPort: body.smtpPort || 465,
     },
   })
 

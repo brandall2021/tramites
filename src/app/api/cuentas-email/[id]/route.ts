@@ -20,6 +20,8 @@ export async function PATCH(
   if (body.usuario) data.usuario = body.usuario
   if (body.password) data.password = body.password
   if (typeof body.active === "boolean") data.active = body.active
+  if (body.smtpHost) data.smtpHost = body.smtpHost
+  if (body.smtpPort) data.smtpPort = body.smtpPort
 
   const cuenta = await prisma.cuentaEmail.update({
     where: { id },

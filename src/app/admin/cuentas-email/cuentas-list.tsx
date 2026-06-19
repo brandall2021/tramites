@@ -12,6 +12,8 @@ type Cuenta = {
   port: number
   usuario: string
   active: boolean
+  smtpHost: string
+  smtpPort: number
 }
 
 export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
@@ -39,6 +41,8 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
           port: parseInt(form.get("port") as string) || 993,
           usuario: form.get("usuario"),
           password: form.get("password"),
+          smtpHost: form.get("smtpHost"),
+          smtpPort: parseInt(form.get("smtpPort") as string) || 465,
         }),
       })
 
@@ -94,6 +98,8 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
       host: form.get("host"),
       port: parseInt(form.get("port") as string) || 993,
       usuario: form.get("usuario"),
+      smtpHost: form.get("smtpHost"),
+      smtpPort: parseInt(form.get("smtpPort") as string) || 465,
     }
     const password = form.get("password") as string
     if (password) body.password = password
@@ -179,8 +185,8 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
               <thead>
                 <tr className="border-b border-stone-200 bg-stone-50 text-left">
                   <th className="px-5 py-3 font-medium text-stone-600">Email</th>
-                  <th className="px-5 py-3 font-medium text-stone-600">Host</th>
-                  <th className="px-5 py-3 font-medium text-stone-600">Puerto</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">IMAP</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">SMTP</th>
                   <th className="px-5 py-3 font-medium text-stone-600">Estado</th>
                   <th className="px-5 py-3 font-medium text-stone-600">Acciones</th>
                 </tr>
@@ -189,8 +195,8 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
                 {cuentas.map((c) => (
                   <tr key={c.id}>
                     <td className="px-5 py-3 font-medium">{c.email}</td>
-                    <td className="px-5 py-3 text-stone-500">{c.host}</td>
-                    <td className="px-5 py-3 text-stone-500">{c.port}</td>
+                    <td className="px-5 py-3 text-stone-500">{c.host}:{c.port}</td>
+                    <td className="px-5 py-3 text-stone-500">{c.smtpHost}:{c.smtpPort}</td>
                     <td className="px-5 py-3">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         c.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
@@ -253,13 +259,35 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700">Puerto</label>
+                <label className="block text-sm font-medium text-stone-700">Puerto IMAP</label>
                 <input
                   name="port"
                   type="number"
                   defaultValue="993"
                   className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
                 />
+              </div>
+              <div className="border-t border-stone-200 pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-500">Salida (SMTP)</p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700">Host SMTP</label>
+                    <input
+                      name="smtpHost"
+                      defaultValue="smtp.gmail.com"
+                      className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700">Puerto SMTP</label>
+                    <input
+                      name="smtpPort"
+                      type="number"
+                      defaultValue="465"
+                      className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                    />
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-stone-700">Usuario</label>
@@ -338,13 +366,35 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700">Puerto</label>
+                <label className="block text-sm font-medium text-stone-700">Puerto IMAP</label>
                 <input
                   name="port"
                   type="number"
                   defaultValue={editingCuenta.port}
                   className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
                 />
+              </div>
+              <div className="border-t border-stone-200 pt-4">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-500">Salida (SMTP)</p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700">Host SMTP</label>
+                    <input
+                      name="smtpHost"
+                      defaultValue={editingCuenta.smtpHost}
+                      className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700">Puerto SMTP</label>
+                    <input
+                      name="smtpPort"
+                      type="number"
+                      defaultValue={editingCuenta.smtpPort}
+                      className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm shadow-xs focus:border-stone-500 focus:outline-hidden focus:ring-1 focus:ring-stone-500"
+                    />
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-stone-700">Usuario</label>
