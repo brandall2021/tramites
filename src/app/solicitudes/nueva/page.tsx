@@ -2,29 +2,40 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/toast"
 
 export default function NuevaSolicitudPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const { addToast } = useToast()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
 
     const form = new FormData(e.currentTarget)
-    const res = await fetch("/api/solicitudes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.get("email"),
-        asunto: form.get("asunto"),
-        mensaje: form.get("mensaje"),
-      }),
-    })
+    try {
+      const res = await fetch("/api/solicitudes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.get("email"),
+          asunto: form.get("asunto"),
+          mensaje: form.get("mensaje"),
+        }),
+      })
 
-    if (res.ok) {
-      router.push("/solicitudes")
-      router.refresh()
+      if (res.ok) {
+        addToast("Solicitud creada", "success")
+        router.push("/solicitudes")
+        router.refresh()
+      } else {
+        addToast("Error al crear solicitud", "error")
+      }
+    } catch {
+      addToast("Error de conexión", "error")
+    } finally {
+      setLoading(false)
     }
   }
 

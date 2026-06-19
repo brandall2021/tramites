@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { useToast } from "@/components/ui/toast"
 
 type Solicitud = {
   id: string
@@ -73,6 +74,7 @@ export function CrmBoard({
     }[]
   } | null>(null)
   const [historialLoading, setHistorialLoading] = useState(false)
+  const { addToast } = useToast()
 
   useEffect(() => {
     const s = selectedId ? solicitudes.find((s) => s.id === selectedId) : null
@@ -98,17 +100,30 @@ export function CrmBoard({
   const selected = selectedId ? solicitudes.find((s) => s.id === selectedId) : null
 
   async function cambiarEstado(id: string, estado: string) {
-    await fetch(`/api/solicitudes/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado }),
-    })
-    router.refresh()
+    try {
+      const res = await fetch(`/api/solicitudes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado }),
+      })
+      if (!res.ok) throw new Error()
+      addToast("Estado actualizado", "success")
+      router.refresh()
+    } catch {
+      addToast("Error al actualizar estado", "error")
+    }
   }
 
   async function analizar(id: string) {
-    await fetch(`/api/analizar/${id}`, { method: "POST" })
-    router.refresh()
+    const toastId = addToast("Analizando con IA...", "loading")
+    try {
+      const res = await fetch(`/api/analizar/${id}`, { method: "POST" })
+      if (!res.ok) throw new Error()
+      addToast("Análisis completado", "success")
+      router.refresh()
+    } catch {
+      addToast("Error al analizar", "error")
+    }
   }
 
   return (
@@ -205,12 +220,19 @@ export function CrmBoard({
                         )}
                       </div>
                       <p className="mt-1.5 text-[10px] text-stone-400">
-                        {new Date(s.fecha).toLocaleDateString("es-AR")}
+                        {new Date(s.fecha).toLocaleDateString("es-AR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
                       </p>
                     </button>
                   ))}
                   {items.length === 0 && (
-                    <p className="py-8 text-center text-xs text-stone-400">Vacío</p>
+                    <div className="flex flex-col items-center py-10 text-center">
+                      <span className="text-lg opacity-20">◇</span>
+                      <p className="mt-2 text-xs text-stone-400">Sin solicitudes</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -264,7 +286,7 @@ export function CrmBoard({
               {!selected.analisis && selected.estado === "PENDIENTE" && (
                 <button
                   onClick={() => analizar(selected.id)}
-                  className="rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800"
+                  className="rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-stone-800"
                 >
                   Analizar IA
                 </button>

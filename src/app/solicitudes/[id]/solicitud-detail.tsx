@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/toast"
 
 type Solicitud = {
   id: string
@@ -51,12 +52,20 @@ export function SolicitudDetail({
   const [analizando, setAnalizando] = useState(false)
   const [respuestaTexto, setRespuestaTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
+  const { addToast } = useToast()
 
   async function analizarIA() {
     setAnalizando(true)
     try {
       const res = await fetch(`/api/analizar/${solicitud.id}`, { method: "POST" })
-      if (res.ok) router.refresh()
+      if (res.ok) {
+        addToast("Análisis completado", "success")
+        router.refresh()
+      } else {
+        addToast("Error al analizar", "error")
+      }
+    } catch {
+      addToast("Error de conexión al analizar", "error")
     } finally {
       setAnalizando(false)
     }
@@ -89,12 +98,20 @@ export function SolicitudDetail({
     if (!respuestaTexto.trim()) return
     setEnviando(true)
     try {
-      await fetch(`/api/responder/${solicitud.id}`, {
+      const res = await fetch(`/api/responder/${solicitud.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ texto: respuestaTexto, aprobarDirecto }),
       })
-      router.refresh()
+      if (res.ok) {
+        addToast(aprobarDirecto ? "Respuesta enviada" : "Borrador guardado", "success")
+        setRespuestaTexto("")
+        router.refresh()
+      } else {
+        addToast("Error al guardar respuesta", "error")
+      }
+    } catch {
+      addToast("Error de conexión", "error")
     } finally {
       setEnviando(false)
     }
@@ -176,8 +193,14 @@ export function SolicitudDetail({
         <button
           onClick={analizarIA}
           disabled={analizando}
-          className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-800 disabled:opacity-50"
         >
+          {analizando && (
+            <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          )}
           {analizando ? "Analizando..." : "Analizar con IA"}
         </button>
       )}
@@ -208,8 +231,17 @@ export function SolicitudDetail({
                 {!r.aprobada && esAdmin && (
                   <button
                     onClick={async () => {
-                      await fetch(`/api/responder/${r.id}`, { method: "PATCH" })
-                      router.refresh()
+                      try {
+                        const res = await fetch(`/api/responder/${r.id}`, { method: "PATCH" })
+                        if (res.ok) {
+                          addToast("Respuesta aprobada y enviada", "success")
+                          router.refresh()
+                        } else {
+                          addToast("Error al aprobar", "error")
+                        }
+                      } catch {
+                        addToast("Error de conexión", "error")
+                      }
                     }}
                     className="mt-2 rounded bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
                   >
@@ -276,13 +308,13 @@ export function SolicitudDetail({
         )}
       </div>
 
-      {solicitud.auditorias.length > 0 && (
+      {solicitud.auditorias.length > 0 ? (
         <div className="rounded-xl border border-stone-200 bg-white p-6">
           <h2 className="mb-3 text-sm font-semibold">Historial</h2>
           <div className="space-y-2">
             {solicitud.auditorias.map((a) => (
               <div key={a.id} className="flex items-start gap-3 text-sm">
-                <span className="shrink-0 text-xs text-stone-400">
+                <span className="shrink-0 whitespace-nowrap text-xs text-stone-400">
                   {new Date(a.fecha).toLocaleString("es-AR")}
                 </span>
                 <span className="font-medium text-stone-700">{a.accion}</span>
@@ -292,6 +324,10 @@ export function SolicitudDetail({
               </div>
             ))}
           </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-stone-200 bg-white p-6 text-center">
+          <p className="text-xs text-stone-400">Sin actividad registrada</p>
         </div>
       )}
     </div>

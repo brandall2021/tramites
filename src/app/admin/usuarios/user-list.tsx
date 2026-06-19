@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/toast"
+import { EmptyState } from "@/components/ui/empty-state"
 
 type User = {
   id: string
@@ -17,6 +19,7 @@ export function UserList({ users }: { users: User[] }) {
   const [showModal, setShowModal] = useState(false)
   const [editUser, setEditUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
+  const { addToast } = useToast()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -37,33 +40,54 @@ export function UserList({ users }: { users: User[] }) {
       ? `/api/admin/usuarios/${editUser.id}`
       : "/api/admin/usuarios"
 
-    const res = await fetch(url, {
-      method: editUser ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    })
+    try {
+      const res = await fetch(url, {
+        method: editUser ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
 
-    if (res.ok) {
-      setShowModal(false)
-      setEditUser(null)
-      router.refresh()
+      if (res.ok) {
+        setShowModal(false)
+        setEditUser(null)
+        addToast(editUser ? "Usuario actualizado" : "Usuario creado", "success")
+        router.refresh()
+      } else {
+        addToast("Error al guardar usuario", "error")
+      }
+    } catch {
+      addToast("Error de conexión", "error")
     }
     setLoading(false)
   }
 
   async function toggleActivo(user: User) {
-    await fetch(`/api/admin/usuarios/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ activo: !user.activo }),
-    })
-    router.refresh()
+    try {
+      const res = await fetch(`/api/admin/usuarios/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activo: !user.activo }),
+      })
+      if (res.ok) {
+        addToast(user.activo ? "Usuario desactivado" : "Usuario activado", "success")
+        router.refresh()
+      }
+    } catch {
+      addToast("Error al cambiar estado", "error")
+    }
   }
 
   async function eliminar(id: string) {
     if (!confirm("¿Eliminar usuario?")) return
-    await fetch(`/api/admin/usuarios/${id}`, { method: "DELETE" })
-    router.refresh()
+    try {
+      const res = await fetch(`/api/admin/usuarios/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        addToast("Usuario eliminado", "success")
+        router.refresh()
+      }
+    } catch {
+      addToast("Error al eliminar", "error")
+    }
   }
 
   return (
@@ -78,66 +102,78 @@ export function UserList({ users }: { users: User[] }) {
         Nuevo usuario
       </button>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 bg-stone-50 text-left">
-              <th className="px-5 py-3 font-medium text-stone-600">Nombre</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Email</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Rol</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Estado</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-stone-100">
-            {users.map((u) => (
-              <tr key={u.id} className="transition-colors hover:bg-stone-50">
-                <td className="px-5 py-3 font-medium">{u.nombre}</td>
-                <td className="px-5 py-3 text-stone-500">{u.email}</td>
-                <td className="px-5 py-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    u.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-stone-100 text-stone-600"
-                  }`}>
-                    {u.role}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    u.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                  }`}>
-                    {u.activo ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setEditUser(u)
-                        setShowModal(true)
-                      }}
-                      className="text-xs text-stone-500 hover:text-stone-700"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => toggleActivo(u)}
-                      className="text-xs text-amber-600 hover:text-amber-800"
-                    >
-                      {u.activo ? "Desactivar" : "Activar"}
-                    </button>
-                    <button
-                      onClick={() => eliminar(u.id)}
-                      className="text-xs text-red-600 hover:text-red-800"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {users.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-stone-200 bg-white">
+          <EmptyState
+            icon="△"
+            title="No hay usuarios"
+            description="Creá usuarios para que puedan acceder al sistema."
+          />
+        </div>
+      ) : (
+        <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-stone-200 bg-stone-50 text-left">
+                  <th className="px-5 py-3 font-medium text-stone-600">Nombre</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Email</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Rol</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Estado</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {users.map((u) => (
+                  <tr key={u.id} className="transition-colors hover:bg-stone-50">
+                    <td className="px-5 py-3 font-medium">{u.nombre}</td>
+                    <td className="px-5 py-3 text-stone-500">{u.email}</td>
+                    <td className="px-5 py-3">
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        u.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-stone-100 text-stone-600"
+                      }`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        u.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                      }`}>
+                        {u.activo ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditUser(u)
+                            setShowModal(true)
+                          }}
+                          className="text-xs text-stone-500 hover:text-stone-700"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => toggleActivo(u)}
+                          className="text-xs text-amber-600 hover:text-amber-800"
+                        >
+                          {u.activo ? "Desactivar" : "Activar"}
+                        </button>
+                        <button
+                          onClick={() => eliminar(u.id)}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

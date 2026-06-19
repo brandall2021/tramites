@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/components/ui/toast"
+import { EmptyState } from "@/components/ui/empty-state"
 
 type Cuenta = {
   id: string
@@ -20,44 +22,66 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
   const [loading, setLoading] = useState(false)
   const [editingCuenta, setEditingCuenta] = useState<Cuenta | null>(null)
   const [editLoading, setEditLoading] = useState(false)
+  const { addToast } = useToast()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
 
     const form = new FormData(e.currentTarget)
-    const res = await fetch("/api/cuentas-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.get("email"),
-        host: form.get("host"),
-        port: parseInt(form.get("port") as string) || 993,
-        usuario: form.get("usuario"),
-        password: form.get("password"),
-      }),
-    })
+    try {
+      const res = await fetch("/api/cuentas-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.get("email"),
+          host: form.get("host"),
+          port: parseInt(form.get("port") as string) || 993,
+          usuario: form.get("usuario"),
+          password: form.get("password"),
+        }),
+      })
 
-    if (res.ok) {
-      setShowModal(false)
-      router.refresh()
+      if (res.ok) {
+        setShowModal(false)
+        addToast("Cuenta agregada", "success")
+        router.refresh()
+      } else {
+        addToast("Error al agregar cuenta", "error")
+      }
+    } catch {
+      addToast("Error de conexión", "error")
     }
     setLoading(false)
   }
 
   async function toggleActiva(cuenta: Cuenta) {
-    await fetch(`/api/cuentas-email/${cuenta.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ active: !cuenta.active }),
-    })
-    router.refresh()
+    try {
+      const res = await fetch(`/api/cuentas-email/${cuenta.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !cuenta.active }),
+      })
+      if (res.ok) {
+        addToast(cuenta.active ? "Cuenta desactivada" : "Cuenta activada", "success")
+        router.refresh()
+      }
+    } catch {
+      addToast("Error al cambiar estado", "error")
+    }
   }
 
   async function eliminar(id: string) {
     if (!confirm("¿Eliminar esta cuenta?")) return
-    await fetch(`/api/cuentas-email/${id}`, { method: "DELETE" })
-    router.refresh()
+    try {
+      const res = await fetch(`/api/cuentas-email/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        addToast("Cuenta eliminada", "success")
+        router.refresh()
+      }
+    } catch {
+      addToast("Error al eliminar", "error")
+    }
   }
 
   async function handleEditSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -74,15 +98,22 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
     const password = form.get("password") as string
     if (password) body.password = password
 
-    const res = await fetch(`/api/cuentas-email/${editingCuenta!.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    })
+    try {
+      const res = await fetch(`/api/cuentas-email/${editingCuenta!.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
 
-    if (res.ok) {
-      setEditingCuenta(null)
-      router.refresh()
+      if (res.ok) {
+        setEditingCuenta(null)
+        addToast("Cuenta actualizada", "success")
+        router.refresh()
+      } else {
+        addToast("Error al actualizar", "error")
+      }
+    } catch {
+      addToast("Error de conexión", "error")
     }
     setEditLoading(false)
   }
@@ -92,15 +123,18 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
     setSyncResult(null)
     try {
       const res = await fetch("/api/imap/sync", { method: "POST" })
+      if (!res.ok) throw new Error()
       const data = await res.json()
-      setSyncResult(
-        data.map((r: { cuenta: string; solicitudes: number; error?: string }) =>
+      const resultText = data.map(
+        (r: { cuenta: string; solicitudes: number; error?: string }) =>
           `${r.cuenta}: ${r.solicitudes} solicitudes${r.error ? ` (error: ${r.error})` : ""}`
-        ).join("\n")
-      )
+      ).join("\n")
+      setSyncResult(resultText)
+      addToast("Sincronización completada", "success")
       router.refresh()
     } catch {
       setSyncResult("Error de conexión")
+      addToast("Error al sincronizar", "error")
     } finally {
       setSyncing(false)
     }
@@ -130,64 +164,69 @@ export function CuentasEmailList({ cuentas }: { cuentas: Cuenta[] }) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 bg-stone-50 text-left">
-              <th className="px-5 py-3 font-medium text-stone-600">Email</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Host</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Puerto</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Estado</th>
-              <th className="px-5 py-3 font-medium text-stone-600">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-stone-100">
-            {cuentas.map((c) => (
-              <tr key={c.id}>
-                <td className="px-5 py-3 font-medium">{c.email}</td>
-                <td className="px-5 py-3 text-stone-500">{c.host}</td>
-                <td className="px-5 py-3 text-stone-500">{c.port}</td>
-                <td className="px-5 py-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    c.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                  }`}>
-                    {c.active ? "Activa" : "Inactiva"}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => toggleActiva(c)}
-                      className="text-xs text-amber-600 hover:text-amber-800"
-                    >
-                      {c.active ? "Desactivar" : "Activar"}
-                    </button>
-                    <button
-                      onClick={() => setEditingCuenta(c)}
-                      className="text-xs text-stone-600 hover:text-stone-800"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => eliminar(c.id)}
-                      className="text-xs text-red-600 hover:text-red-800"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {cuentas.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-stone-400">
-                  No hay cuentas configuradas
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {cuentas.length === 0 ? (
+        <div className="rounded-xl border border-stone-200 bg-white">
+          <EmptyState
+            icon="◎"
+            title="No hay cuentas configuradas"
+            description="Agregá una cuenta de Gmail para sincronizar solicitudes automáticamente."
+          />
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-stone-200 bg-stone-50 text-left">
+                  <th className="px-5 py-3 font-medium text-stone-600">Email</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Host</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Puerto</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Estado</th>
+                  <th className="px-5 py-3 font-medium text-stone-600">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {cuentas.map((c) => (
+                  <tr key={c.id}>
+                    <td className="px-5 py-3 font-medium">{c.email}</td>
+                    <td className="px-5 py-3 text-stone-500">{c.host}</td>
+                    <td className="px-5 py-3 text-stone-500">{c.port}</td>
+                    <td className="px-5 py-3">
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        c.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                      }`}>
+                        {c.active ? "Activa" : "Inactiva"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleActiva(c)}
+                          className="text-xs text-amber-600 hover:text-amber-800"
+                        >
+                          {c.active ? "Desactivar" : "Activar"}
+                        </button>
+                        <button
+                          onClick={() => setEditingCuenta(c)}
+                          className="text-xs text-stone-600 hover:text-stone-800"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => eliminar(c.id)}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
