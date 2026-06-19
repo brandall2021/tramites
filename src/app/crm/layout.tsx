@@ -4,7 +4,7 @@ import { AuthProvider } from "@/components/session-provider"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 
-export default async function DashboardLayout({
+export default async function CrmLayout({
   children,
 }: {
   children: React.ReactNode

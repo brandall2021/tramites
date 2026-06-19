@@ -1,12 +1,10 @@
 export const dynamic = "force-dynamic"
 
 import { LoginForm } from "./login-form"
-import { ToastProvider } from "@/components/ui/toast"
 
 export default function LoginPage() {
   return (
-    <ToastProvider>
-      <div className="flex min-h-screen flex-col items-center justify-center bg-stone-50 p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-stone-50 p-4">
         <div className="w-full max-w-sm">
           <div className="mb-10 text-center">
             <img
@@ -29,6 +27,5 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-    </ToastProvider>
   )
 }

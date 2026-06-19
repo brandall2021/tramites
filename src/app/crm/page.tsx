@@ -1,14 +1,11 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { redirect } from "next/navigation"
 import { CrmBoard } from "./crm-board"
 
 export const dynamic = "force-dynamic"
 
 export default async function CrmPage() {
   const session = await auth()
-  if (!session) redirect("/")
-
   const solicitudes = await prisma.solicitud.findMany({
     orderBy: { fecha: "desc" },
     include: {
@@ -28,7 +25,7 @@ export default async function CrmPage() {
     <CrmBoard
       solicitudes={solicitudes}
       normativas={normativas}
-      esAdmin={session.user.role === "ADMIN"}
+      esAdmin={session?.user.role === "ADMIN"}
     />
   )
 }
